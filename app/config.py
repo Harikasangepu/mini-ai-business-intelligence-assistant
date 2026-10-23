@@ -21,7 +21,7 @@ class Settings:
     DATABASE_PATH: Path = Path(os.getenv("DATABASE_PATH", str(DEFAULT_DB_PATH)))
     
     API_HOST: str = os.getenv("API_HOST", "127.0.0.1")
-    API_PORT: int = int(os.getenv("API_PORT", "8000"))
+    API_PORT: int = int(os.getenv("API_PORT", "8001"))
     
     # LLM Settings
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini").lower()
