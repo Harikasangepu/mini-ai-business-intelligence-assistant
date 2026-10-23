@@ -128,8 +128,9 @@ python -m app.data_loader
 #### Option A: Start the FastAPI Backend
 In Terminal 1:
 ```bash
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+python run_api.py
 ```
+*(Alternatively: `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`)*
 - Interactive API Docs (Swagger UI): `http://127.0.0.1:8000/docs`
 - Health check: `http://127.0.0.1:8000/health`
 
