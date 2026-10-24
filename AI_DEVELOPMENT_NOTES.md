@@ -71,16 +71,12 @@ This document provides a transparent, detailed retrospective of the AI-assisted 
 ### Problem 6: Invalid Month Inputs and Missing Sales Data
 
 - **Symptom:** Revenue comparison questions could contain invalid month names or request months for which no sales records existed. Treating missing revenue as zero could produce misleading comparisons.
-
 - **Root Cause:** The question interpretation and revenue comparison logic needed stricter validation of month inputs and explicit handling of months without recorded sales.
-
 - **Debugging & Resolution:**
   - Updated the question interpretation logic to reject invalid month names rather than silently substituting default months.
   - Improved handling of ambiguous comparison questions when the user does not specify the months.
   - Updated the revenue comparison logic to return a clear message when one or both requested months have no sales records.
-
 - **Validation:** Tested comparisons between January and February 2026, comparisons between November and December 2026, invalid month inputs, and unrelated questions. The automated test suite passed.
-
 - **Outcome:** These changes improve the reliability of revenue comparisons and help prevent misleading answers when the requested data is unavailable.
 
 ---
