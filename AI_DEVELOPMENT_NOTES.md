@@ -7,9 +7,10 @@ This document provides a transparent, detailed retrospective of the AI-assisted 
 
 ## 1. AI Tools Used
 
-- **Google Antigravity / Gemini 3.8 Flash (High)**: Primary AI coding pair programmer used for architecture design, dataset inspection, implementation, test-driven development, and debugging.
-- **Google Gemini API (`gemini-1.5-flash`) & OpenAI API (`gpt-4o-mini`)**: Embedded within the application backend for natural-language query interpretation, intent classification, and parameter extraction.
-
+- **Google Antigravity:** Used as an AI-assisted coding tool for architecture planning, implementation, test generation, and debugging.
+- **ChatGPT:** Used for development guidance, troubleshooting, code review, documentation improvements, and understanding test results.
+- **Google Gemini API:** Integrated for natural-language question interpretation. During testing, requests to the configured Gemini model encountered service-availability issues, so the application used its deterministic fallback engine for the questions tested.
+- **Python, FastAPI, SQLite, Streamlit, and Pytest:** Used to build the application, store and query sales data, present results, and verify functionality.
 ---
 
 ## 2. How AI Assisted During Development
@@ -50,14 +51,23 @@ This document provides a transparent, detailed retrospective of the AI-assisted 
   yielded exactly 638 units (and 182 units for the South region).
 - **Debugging & Resolution:** Ran raw verification queries directly against the SQLite database to confirm the true mathematical baseline. Updated the unit test assertions to reflect actual data rather than fabricated approximations, adhering strictly to the constraint: *"Do not invent dataset values or claim that tests passed without running them."*
 
-### Problem 3: Pydantic v2 Deprecation Warning
-- **Symptom:** Pytest emitted `PydanticDeprecatedSince20: Using extra keyword arguments on Field is deprecated (Extra keys: 'example')`.
-- **Debugging & Resolution:** Refactored `Field(..., example="...")` to `Field(..., json_schema_extra={"example": "..."})` conforming to Pydantic v2 standards.
+### Problem 3: Starlette Test Client Deprecation Warning
+
+- **Symptom:** The test suite passed but reported a deprecation warning concerning the use of `httpx` with `starlette.testclient`.
+- **Root Cause:** The installed testing dependencies reported that the current test-client integration is deprecated.
+- **Status:** All 19 tests passed despite the warning. Updating the testing dependencies and verifying compatibility would be a future maintenance task.
 
 ### Problem 4: Host Disk Space Exhaustion During Package Installation
 - **Symptom:** Writing `README.md` failed with OS error: `There is not enough space on the disk.`
 - **Root Cause:** `Get-PSDrive C` revealed `0.00 GB` free space on Drive C due to accumulated pip HTTP wheel cache (`c:\users\dell\appdata\local\pip\cache\http-v2` holding 768.4 MB).
 - **Debugging & Resolution:** Executed `pip cache purge`, immediately reclaiming 720 MB of free storage, allowing file creation to proceed smoothly.
+
+### Problem 5: Gemini API Availability
+
+- **Symptom:** Requests to the configured Gemini model returned a service-unavailable error, and some requests timed out.
+- **Investigation:** Direct API requests also encountered availability issues, so the problem could not be resolved by changing the application's question-handling logic alone.
+- **Resolution:** The application uses its deterministic fallback engine when the LLM request fails. The five sample business questions were tested successfully through this fallback.
+- **Limitation:** The fallback supports predefined business-question patterns. Successful operation of the Gemini-powered interpretation path remains unverified and should be tested again when the configured model is available.
 
 ---
 

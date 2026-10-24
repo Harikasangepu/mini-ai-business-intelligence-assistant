@@ -8,6 +8,17 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
+
+st.markdown("""
+    <style>
+        .stDeployButton,
+        [data-testid="stAppDeployButton"],
+        [data-testid="stAppDeployButton"] button {
+            display: none !important;
+            visibility: hidden !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 # Add parent directory to path to enable standalone fallback if needed
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
@@ -80,7 +91,7 @@ def ask_backend(question: str):
         resp = requests.post(
             f"{API_URL}/ask",
             json={"question": question},
-            timeout=10
+            timeout=60
         )
         if resp.status_code == 200:
             return resp.json()
@@ -94,84 +105,49 @@ def ask_backend(question: str):
     except Exception as e:
         return {"status": "error", "answer": f"Request failed: {str(e)}"}
 
-# -------------------------------------------------------------
-# Sidebar: System Status & Business Rules
+## -------------------------------------------------------------
+# Sidebar: System Status
 # -------------------------------------------------------------
 with st.sidebar:
     st.header("⚙️ System Status")
     is_online, health_data = check_backend_health()
-    
+
     if is_online:
-        st.success("🟢 FastAPI Backend: Operational")
-        st.caption(f"Host: {API_URL}")
-        st.caption(f"Records loaded: {health_data.get('total_sales_records', 0)}")
-        provider = health_data.get('llm_provider', 'Fallback')
-        st.caption(f"LLM Engine: {provider}")
+        st.success("🟢 Backend: Connected")
+        st.caption(
+            f"📊 Sales Records: {health_data.get('total_sales_records', 0)}"
+        )
     else:
-        st.warning("🟡 FastAPI Offline: Using Direct Python Engine")
-        st.caption("Backend API not reachable at localhost:8000; querying SQLite directly.")
-        
+        st.warning("🟡 Backend Offline")
+        st.caption("Using the available fallback processing mode.")
+
     st.divider()
-    st.subheader("📋 Ingestion Rules")
-    st.markdown("""
-    - **Imputation:** `TXN0051` Laptop Stand unit price missing -> Imputed with catalog price (**₹1,200.00**).
-    - **Returns:** `TXN0033` (Monitor) status is `Returned` -> Excluded from Net Revenue calculations.
-    - **Zero Qty:** `TXN0034` (0 items) -> Preserved with line revenue = ₹0.00.
-    - **Net Formula:** `SUM((Quantity * Unit_price) - Discount_amount)`.
-    """)
-    
-    st.divider()
-    st.caption("RSG Graduate Engineer Trainee Selection Assignment")
 
 # -------------------------------------------------------------
 # Header
 # -------------------------------------------------------------
 st.title("💼 Mini AI Business Intelligence Assistant")
-st.markdown("Ask natural language business questions and get real-time answers backed by validated SQL queries on sales data.")
-
-# -------------------------------------------------------------
-# Quick Question Buttons
-# -------------------------------------------------------------
-st.write("##### 💡 Try an example question:")
-col1, col2, col3, col4, col5 = st.columns(5)
-
-selected_question = None
-
-with col1:
-    if st.button("💰 Total Revenue", use_container_width=True):
-        selected_question = "What is the total revenue?"
-with col2:
-    if st.button("🏆 Top Product", use_container_width=True):
-        selected_question = "Which product generated the highest revenue?"
-with col3:
-    if st.button("📈 Monthly Trend", use_container_width=True):
-        selected_question = "What is the monthly revenue trend?"
-with col4:
-    if st.button("🌍 Top Region", use_container_width=True):
-        selected_question = "Which region generated the highest sales?"
-with col5:
-    if st.button("⚖️ Month vs Month", use_container_width=True):
-        selected_question = "How did revenue change between two months?"
-
+st.markdown(
+    "Ask business questions in natural language and get answers "
+    "supported by sales data and SQL queries."
+)
 # -------------------------------------------------------------
 # Question Input Form
 # -------------------------------------------------------------
 question_input = st.text_input(
-    "Or enter your custom question:",
-    value=selected_question or "",
-    placeholder="e.g., Which product generated the highest revenue?",
+    "Enter your business question:",
+    placeholder="e.g., What is the total revenue?",
     key="user_question_input"
 )
 
 submit_btn = st.button("Ask Assistant 🚀", type="primary")
 
 # Execute query if user pressed button or selected chip
-active_question = question_input.strip() if submit_btn or selected_question else None
+active_question = question_input.strip() if submit_btn else None
 
 if active_question:
     with st.spinner("Analyzing sales data and verifying query..."):
         result = ask_backend(active_question)
-        
     st.divider()
     
     # 1. Answer Card
@@ -268,13 +244,6 @@ if active_question:
             st.code(sql_query, language="sql")
             st.caption("🔒 Validated against destructive operations (Read-Only SQLite connection).")
             
-        # Execution Metadata
-        meta_col1, meta_col2, meta_col3 = st.columns(3)
-        badge_class = "badge-llm" if "LLM" in source_label else "badge-fallback"
-        meta_col1.markdown(f"**Interpretation Source:** <span class='{badge_class}'>{source_label}</span>", unsafe_allow_html=True)
-        meta_col2.markdown(f"**Intent Detected:** `{intent}`")
-        meta_col3.markdown(f"**Confidence:** `{confidence * 100:.1f}%`")
-        
     else:
         st.warning("⚠️ Unsupported or Ambiguous Question")
         st.write(answer_text)

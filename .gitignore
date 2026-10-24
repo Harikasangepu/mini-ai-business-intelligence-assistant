@@ -32,6 +32,8 @@ wheels/
 
 # Environment variables & secrets (CRITICAL: Never commit API keys)
 .env
+.env.*
+!.env.example
 .env.local
 *.key
 *.secret
