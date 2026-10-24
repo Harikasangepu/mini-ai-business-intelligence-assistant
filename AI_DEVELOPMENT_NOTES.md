@@ -7,10 +7,9 @@ This document provides a transparent, detailed retrospective of the AI-assisted 
 
 ## 1. AI Tools Used
 
-- **Google Antigravity:** Used as an AI-assisted coding tool for architecture planning, implementation, test generation, and debugging.
 - **ChatGPT:** Used for development guidance, troubleshooting, code review, documentation improvements, and understanding test results.
-- **Google Gemini API:** Integrated for natural-language question interpretation. During testing, requests to the configured Gemini model encountered service-availability issues, so the application used its deterministic fallback engine for the questions tested.
-- **Python, FastAPI, SQLite, Streamlit, and Pytest:** Used to build the application, store and query sales data, present results, and verify functionality.
+- **Google Gemini API:** Integrated for natural-language question interpretation. When Gemini requests fail because of API quota limits or service availability issues, the application uses a deterministic fallback engine to handle supported business questions.
+- **Python, FastAPI, SQLite, Streamlit, and Pytest:** Used to implement the application, manage and query sales data, display results, and test functionality.
 ---
 
 ## 2. How AI Assisted During Development
