@@ -107,17 +107,28 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configure Environment Variables (Optional)
-Copy `.env.example` to `.env`:
+
+Copy `.env.example` to `.env`.
+
+**On Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+**On Linux / macOS:**
 ```bash
 cp .env.example .env
 ```
-To enable live LLM query interpretation, add your API key:
+
+To enable live LLM query interpretation, open `.env` and add your Gemini API key:
+
 ```env
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
+
 > [!NOTE]
-> If an API key is unavailable or an LLM request fails, the application falls back to its deterministic intent interpreter for supported business questions. The API response includes a source field indicating which interpretation mechanism was used.
+> If an API key is unavailable or an LLM request fails, the application falls back to its deterministic intent interpreter for supported business questions. The API response includes a `source` field indicating which interpretation mechanism was used.
 
 ### 5. Ingest the CSV into SQLite (Optional - runs automatically on backend launch)
 ```bash
