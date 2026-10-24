@@ -86,8 +86,8 @@ All five assignment questions are calculated directly using actual database quer
 
 ### 1. Clone the Repository & Navigate to Workspace
 ```bash
-git clone <your-github-repo-url>
-cd "Mini ai assistant"
+git clone https://github.com/Harikasangepu/mini-ai-business-intelligence-assistant.git
+cd mini-ai-business-intelligence-assistant
 ```
 
 ### 2. Set Up a Virtual Environment (Recommended)
@@ -174,3 +174,4 @@ Latest test result: 19 passed, 0 failed. One dependency deprecation warning was 
 1. **Scope of Analytical Intents:** The assistant is calibrated for core business metrics (revenue, top products, monthly trends, regional breakdown, month comparisons). Complex multi-hop queries (e.g. "correlate retail discounts with customer churn") fall outside the scope.
 2. **Static Sales Period:** The dataset covers January 2026 to June 2026. Date queries outside this window return ₹0.00.
 3. **Single Table Schema:** The current model operates on a single denormalized `sales` table.
+4. **LLM Availability and Quota:** Google Gemini integration is implemented for structured query interpretation. However, requests may fail when the API is unavailable or the configured quota is exhausted. In these cases,the application uses its deterministic fallback interpreter for supported questions. The fallback does not have the full language-understanding capabilities of an LLM, and unsupported questions may not be answered.
