@@ -281,12 +281,42 @@ def query_revenue_change_between_months(
     results = execute_safe_query(sql, params=(m1, m2), db_path=db_path)
     
     month_data = {r["month"]: r for r in results}
-    rev1 = month_data.get(m1, {}).get("revenue", 0.0)
-    rev2 = month_data.get(m2, {}).get("revenue", 0.0)
-    
+
+    # Check that both requested months have recorded sales.
+    missing_months = [
+        month for month in (m1, m2)
+        if month not in month_data
+    ]
+
+    if missing_months:
+        missing_labels = ", ".join(missing_months)
+
+        return {
+            "intent": "REVENUE_CHANGE_BETWEEN_MONTHS",
+            "question": f"How did revenue change between {m1} and {m2}?",
+            "answer": (
+                f"Comparison unavailable. No completed sales records were found "
+                f"for {missing_labels}. Please choose months with recorded sales data."
+            ),
+            "figures": {
+                "month1": m1,
+                "month2": m2,
+                "missing_months": missing_months
+            },
+            "supporting_table": results,
+            "sql_query": sql.strip().replace("(?, ?)", f"('{m1}', '{m2}')"),
+            "chart_type": None
+        }
+
+    rev1 = month_data[m1]["revenue"]
+    rev2 = month_data[m2]["revenue"]
+
     diff = rev2 - rev1
     pct_change = ((diff / rev1) * 100) if rev1 > 0 else 0.0
-    direction = "increased" if diff > 0 else ("decreased" if diff < 0 else "remained unchanged")
+    direction = (
+        "increased" if diff > 0
+        else ("decreased" if diff < 0 else "remained unchanged")
+    )
     
     narrative = (
         f"Comparing {m1} to {m2}: Revenue {direction} by ₹{abs(diff):,.2f} ({pct_change:+.2f}%). "

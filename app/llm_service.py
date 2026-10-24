@@ -144,6 +144,7 @@ def interpret_with_deterministic_fallback(question: str) -> Dict[str, Any]:
         )
 
     # Intent 5: Compare revenue between months.
+        # Intent 5: Compare revenue between months.
     comparison_words = [
         "compare", "comparison", "difference", "change",
         "growth", "increase", "decrease", "versus", "vs",
@@ -157,7 +158,7 @@ def interpret_with_deterministic_fallback(question: str) -> Dict[str, Any]:
         "apr", "jun", "jul", "aug", "sep", "oct", "nov", "dec"
     ]
 
-    if (
+    is_comparison = (
         has_any(comparison_words)
         and (
             has_any(month_words)
@@ -166,18 +167,62 @@ def interpret_with_deterministic_fallback(question: str) -> Dict[str, Any]:
             or "monthly revenue" in q
             or "monthly sales" in q
         )
-    ):
+    )
+
+    if is_comparison:
+        # Reject explicitly written month names that are not valid.
+        explicit_months = re.findall(
+            r'\b([a-z]+)\s+\d{4}\b',
+            q
+        )
+
+        valid_month_names = {
+            "jan", "january", "feb", "february",
+            "mar", "march", "apr", "april", "may",
+            "jun", "june", "jul", "july", "aug", "august",
+            "sep", "sept", "september", "oct", "october",
+            "nov", "november", "dec", "december"
+        }
+
+        for month_name in explicit_months:
+            if month_name not in valid_month_names:
+                return {
+                    "intent": INTENT_UNKNOWN,
+                    "confidence": 0.2,
+                    "source": "Deterministic Fallback Engine",
+                    "parameters": {}
+                }
+
         m1, m2 = extract_months_from_text(q)
+
+        # Do not silently substitute default months.
+                # Preserve the comparison intent when the user asks generally
+        # about comparing two months without specifying their names.
+        if not m1 or not m2:
+            if "two months" in q or "2 months" in q:
+                return {
+                    "intent": INTENT_REVENUE_CHANGE_BETWEEN_MONTHS,
+                    "confidence": 0.85,
+                    "source": "Deterministic Fallback Engine",
+                    "parameters": {}
+                }
+
+            return {
+                "intent": INTENT_UNKNOWN,
+                "confidence": 0.2,
+                "source": "Deterministic Fallback Engine",
+                "parameters": {}
+            }
+
         return {
             "intent": INTENT_REVENUE_CHANGE_BETWEEN_MONTHS,
             "confidence": 0.95,
             "source": "Deterministic Fallback Engine",
             "parameters": {
-                "month1": m1 or "2026-05",
-                "month2": m2 or "2026-06"
+                "month1": m1,
+                "month2": m2
             }
         }
-
     # Intent 2: Highest-revenue product.
     product_phrases = [
         "which product", "what product", "top product",
@@ -533,8 +578,25 @@ def process_business_question(question: str, db_path: Optional[Any] = None) -> D
         # If parameters were not extracted, extract from question text
         if not m1 or not m2:
             extracted_m1, extracted_m2 = extract_months_from_text(question)
-            m1 = m1 or extracted_m1 or "2026-05"
-            m2 = m2 or extracted_m2 or "2026-06"
+            m1 = m1 or extracted_m1
+            m2 = m2 or extracted_m2
+
+        if not m1 or not m2:
+            return {
+            "status": "unsupported",
+            "question": question,
+            "intent": INTENT_UNKNOWN,
+            "answer": (
+                "Please specify two valid months to compare, "
+                "for example, 'Compare May 2026 and June 2026'."
+            ),
+            "figures": {},
+            "supporting_table": [],
+            "sql_query": "N/A (Invalid or missing month parameters)",
+            "chart_type": None,
+            "confidence": 0.2,
+            "source": source
+            }
         res = query_revenue_change_between_months(month1=m1, month2=m2, db_path=db_path)
     else:
         # Graceful handling of unsupported / out-of-scope questions
