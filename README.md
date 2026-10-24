@@ -164,11 +164,11 @@ python -m pytest -v
 ```
 Latest test result: 19 passed, 0 failed. One dependency deprecation warning was reported.
 
-### Test Coverage Highlights:
-- **`tests/test_data_loader.py`**: Validates the dataset row count (51), missing unit price imputation for `TXN0051` (Laptop Stand), detection of returned transactions and zero-quantity records, and net revenue calculations.
-- **`tests/test_query_service.py`**: Verifies exact mathematical outputs for all 5 analytical questions and confirms that destructive SQL statements (`DROP`, `DELETE`, `UPDATE`, `INSERT`, `ALTER`, multi-statements) are blocked.
-- **`tests/test_api.py`**: Tests `GET /health`, `POST /ask` with valid questions, edge-case month comparisons, empty inputs, and unsupported queries.
-- **`tests/test_llm_service.py`**: Validates month entity extraction and fallback intent classification.
+### Test Coverage Highlights
+- **`tests/test_data_loader.py`**: Validates dataset cleaning, missing unit price imputation, and SQLite ingestion.
+- **`tests/test_query_service.py`**: Verifies revenue calculations, product and regional rankings, monthly trends, revenue comparisons, and SQL safety.
+- **`tests/test_api.py`**: Tests API endpoints, valid and invalid inputs, unsupported questions, and month-comparison edge cases.
+- **`tests/test_llm_service.py`**: Tests month extraction, deterministic fallback intent classification, and unsupported or ambiguous questions.
 
 ---
 
@@ -183,6 +183,6 @@ Latest test result: 19 passed, 0 failed. One dependency deprecation warning was 
 
 ## ⚠️ Known Limitations
 1. **Scope of Analytical Intents:** The assistant is calibrated for core business metrics (revenue, top products, monthly trends, regional breakdown, month comparisons). Complex multi-hop queries (e.g. "correlate retail discounts with customer churn") fall outside the scope.
-2. **Static Sales Period:** The dataset covers January 2026 to June 2026. Date queries outside this window return ₹0.00.
+2. **Static Sales Period:** The dataset covers January 2026 to June 2026. Revenue comparisons involving months without recorded sales return an explanatory message rather than treating missing data as zero revenue.
 3. **Single Table Schema:** The current model operates on a single denormalized `sales` table.
 4. **LLM Availability and Quota:** Google Gemini integration is implemented for structured query interpretation. However, requests may fail when the API is unavailable or the configured quota is exhausted. In these cases,the application uses its deterministic fallback interpreter for supported questions. The fallback does not have the full language-understanding capabilities of an LLM, and unsupported questions may not be answered.
